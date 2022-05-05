@@ -1,0 +1,36 @@
+class Student:
+  def __init__(self):
+    model1 = Sequential()
+    model1.add(Conv2D(32, (3,3), activation=swish, kernel_initializer='he_uniform', padding='same', input_shape=(32,32,3)))
+    model1.add(Conv2D(32, (3, 3), activation=swish, kernel_initializer='he_uniform', padding='same'))
+    model1.add(MaxPooling2D((2, 2)))
+    model1.add(Dropout(0.2))
+    model1.add(Conv2D(8,(3,3),activation=swish,kernel_initializer='he_uniform', padding='same', input_shape=(16,16,32)))
+    model1.add(MaxPooling2D((4,4)))
+    model1.add(Conv2D(4,(3,3),activation=swish,kernel_initializer='he_uniform', padding='same'))
+    model1.add(Conv2D(8,(3,3),activation=swish,kernel_initializer='he_uniform', padding='same'))
+    model1.add(Conv2D(64, (3, 3), activation=swish, kernel_initializer='he_uniform', padding='same'))
+    model1.add(MaxPooling2D((2, 2)))
+    model1.add(Dropout(0.2))
+    model1.add(Conv2D(128, (3, 3), activation=swish, kernel_initializer='he_uniform', padding='same'))
+    model1.add(Conv2D(128, (3, 3), activation=swish, kernel_initializer='he_uniform', padding='same'))
+    model1.add(MaxPooling2D((2, 2)))
+    model1.add(Dropout(0.2))
+    model1.add(Flatten())
+    model1.add(Dense(128, activation=swish, kernel_initializer='he_uniform'))
+    model1.add(Dropout(0.2))
+    model1.add(Dense(10, name='logits'))
+    model1.add(Activation('softmax'))
+    model1.summary()
+    logits = model1.get_layer('logits').output
+    logits = Lambda(lambda x:x/temperature)(logits)
+    out = Activation('softmax',name='soft')(logits)
+    
+    new_student = keras.models.Model(inputs=model1.input,outputs=out)
+    new_student.summary()
+    
+    new_student.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    
+    new_student.fit(train_data,softened_prob,epochs=100)
+    (loss,accuracy) = new_student.evaluate(test_data,test_labels)
+    print(loss, accuracy)
